@@ -27,4 +27,47 @@ class Styles {
       backgroundColor: Styles.buttonColor,
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)));
+
+  static InputDecoration inputTextFieldStyle(String label,
+      {bool isDatePicker = false}) {
+    return InputDecoration(
+      prefixIcon: isDatePicker ? const Icon(Icons.date_range_rounded) : null,
+      labelText: label,
+      errorStyle: const TextStyle(height: 0, fontSize: 12),
+      labelStyle: const TextStyle(
+          fontSize: 16, color: Colors.white, fontStyle: FontStyle.italic),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(
+            width: 0.5,
+            color: Colors.white,
+          )),
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(width: 1.5, color: Colors.white),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderSide: BorderSide(width: 1, color: Colors.red.shade900),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderSide: BorderSide(width: 1, color: Colors.red.shade900),
+        borderRadius: BorderRadius.circular(15),
+      ),
+    );
+  }
+
+  static Size screenSize(BuildContext context) {
+    return MediaQuery.of(context).size;
+  }
+
+  static double kScreenHeight(BuildContext context,
+      {double percentage = 1, double reducedBy = 0.0}) {
+    return (screenSize(context).height - reducedBy) * percentage;
+  }
+
+  static double kScreenWidth(BuildContext context,
+      {double percentage = 1, double reducedBy = 0.0}) {
+    return (screenSize(context).width - reducedBy) * percentage;
+  }
 }

@@ -3,6 +3,7 @@ import 'package:todoapp/utils/styles.dart';
 import 'package:todoapp/providers/task_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:todoapp/widgets/no_glow_scroll.dart';
 
 class CreateTask extends StatefulWidget {
   @override
@@ -11,24 +12,20 @@ class CreateTask extends StatefulWidget {
 
 class _CreateTaskState extends State<CreateTask> {
   late TaskProvider _taskProvider;
-  final TextEditingController myControllerTitle = TextEditingController();
-  final TextEditingController myControllerDate = TextEditingController();
-  final TextEditingController myControllerTime = TextEditingController();
-  final TextEditingController myControllerDetails = TextEditingController();
+  final TextEditingController _myControllerTitle = TextEditingController();
+  final TextEditingController _myControllerDate = TextEditingController();
+  final TextEditingController _myControllerTime = TextEditingController();
+  final TextEditingController _myControllerDetails = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-
-  final AppBar _topAppBar = AppBar(
-      title: Text("New Task", style: Styles.headerText),
-      elevation: 1,
-      backgroundColor: Styles.primaryBaseColor);
+  bool _isFormValid = false;
 
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
-    myControllerTitle.dispose();
-    myControllerDate.dispose();
-    myControllerTime.dispose();
-    myControllerDetails.dispose();
+    _myControllerTitle.dispose();
+    _myControllerDate.dispose();
+    _myControllerTime.dispose();
+    _myControllerDetails.dispose();
     super.dispose();
   }
 
@@ -37,9 +34,20 @@ class _CreateTaskState extends State<CreateTask> {
     _taskProvider = Provider.of(context);
     return Scaffold(
         backgroundColor: Styles.primaryBaseColor,
-        appBar: _topAppBar,
-        body: SingleChildScrollView(
-            padding: const EdgeInsets.all(20), child: mainPage()));
+        appBar: AppBar(
+            title: Text("New Task", style: Styles.headerText),
+            elevation: 1,
+            backgroundColor: Styles.primaryBaseColor),
+        body: GestureDetector(
+          onTap: () {
+            FocusScopeNode currentFocus = FocusScope.of(context);
+
+            if (!currentFocus.hasPrimaryFocus) {
+              currentFocus.unfocus();
+            }
+          },
+          child: createTaskForm(),
+        ));
   }
 
   // String _errorText() {
@@ -80,202 +88,197 @@ class _CreateTaskState extends State<CreateTask> {
   //   );
   // }
 
-  Widget mainPage() {
+  Widget createTaskForm() {
     return Form(
       key: _formKey,
+      onChanged: () {
+        if (_myControllerTitle.text.isNotEmpty &&
+            _myControllerDate.text.isNotEmpty &&
+            _myControllerTime.text.isNotEmpty) {
+          _isFormValid = true;
+        } else {
+          _isFormValid = false;
+        }
+        setState(() {});
+      },
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // TASK TITLE
-          TextFormField(
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              validator: (titleValue) {
-                if (titleValue!.isEmpty) {
-                  return "Cannot be empty";
-                }
-                return null;
-              },
-              controller: myControllerTitle,
-              cursorColor: Styles.secondaryColor,
-              decoration: InputDecoration(
-                  labelText: "Title",
-                  labelStyle: Styles.titleText,
-                  focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Styles.secondaryColor))),
-              style: Styles.userInputText),
-          const SizedBox(height: 40),
-          // TASK DATE
-          TextFormField(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            style: Styles.userInputText,
-            controller: myControllerDate,
-            validator: (dateValue) {
-              if (dateValue!.isEmpty) {
-                return "Cannot be empty";
-              }
-              return null;
-            },
-            decoration: InputDecoration(
-                labelText: "Date",
-                labelStyle: Styles.titleText,
-                focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white))),
-            readOnly: true,
-            onTap: () async {
-              DateTime? pickedDate = await showDatePicker(
-                  context: context,
-                  builder: (context, child) {
-                    return Theme(
-                      data: Theme.of(context).copyWith(
-                        colorScheme: ColorScheme.light(
-                            primary: Styles.primaryBaseColor,
-                            onPrimary: Styles.secondaryColor,
-                            onSurface: Colors.black),
-                        textButtonTheme: TextButtonThemeData(
-                            style: TextButton.styleFrom(
-                                foregroundColor: Styles.primaryBaseColor)),
+          Expanded(
+            child: ScrollConfiguration(
+              behavior: NoGlowScrollBehavior(),
+              child: StretchingOverscrollIndicator(
+                axisDirection: AxisDirection.down,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          validator: (titleValue) {
+                            if (titleValue!.isEmpty) {
+                              return "Cannot be empty";
+                            }
+                            return null;
+                          },
+                          controller: _myControllerTitle,
+                          cursorColor: Styles.secondaryColor,
+                          decoration: Styles.inputTextFieldStyle("Title"),
+                          style: Styles.userInputText),
+                      const SizedBox(height: 40),
+                      // TASK DATE
+                      TextFormField(
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        style: Styles.userInputText,
+                        controller: _myControllerDate,
+                        validator: (dateValue) {
+                          if (dateValue!.isEmpty) {
+                            return "Cannot be empty";
+                          }
+                          return null;
+                        },
+                        decoration: Styles.inputTextFieldStyle("Date"),
+                        readOnly: true,
+                        onTap: () async {
+                          DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: ColorScheme.light(
+                                        primary: Styles.primaryBaseColor,
+                                        onPrimary: Styles.secondaryColor,
+                                        onSurface: Colors.black),
+                                    textButtonTheme: TextButtonThemeData(
+                                        style: TextButton.styleFrom(
+                                            foregroundColor:
+                                                Styles.primaryBaseColor)),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime(2030));
+                          if (pickedDate != null) {
+                            String formattedDate =
+                                DateFormat.yMMMMd('en_US').format(pickedDate);
+                            setState(() {
+                              _myControllerDate.text = formattedDate;
+                            });
+                          }
+                        },
                       ),
-                      child: child!,
-                    );
-                  },
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime(2030));
-              if (pickedDate != null) {
-                String formattedDate =
-                    DateFormat.yMMMMd('en_US').format(pickedDate);
-                setState(() {
-                  myControllerDate.text = formattedDate;
-                });
-              }
-            },
-          ),
-          const SizedBox(height: 40),
-          // TASK TIME
-          TextFormField(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            style: Styles.userInputText,
-            controller: myControllerTime,
-            validator: (timeValue) {
-              if (timeValue!.isEmpty) {
-                return "Cannot be empty";
-              }
-              return null;
-            },
-            decoration: InputDecoration(
-                labelText: "Time",
-                labelStyle: Styles.titleText,
-                focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white))),
-            readOnly: true,
-            onTap: () async {
-              TimeOfDay? pickedTime = await showTimePicker(
-                context: context,
-                builder: (context, child) {
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                      colorScheme: ColorScheme.light(
-                          primary: Styles.primaryBaseColor,
-                          onPrimary: Styles.secondaryColor,
-                          onSurface: Colors.black),
-                      textButtonTheme: TextButtonThemeData(
-                          style: TextButton.styleFrom(
-                              foregroundColor: Styles.primaryBaseColor)),
-                    ),
-                    child: child!,
-                  );
-                },
-                initialTime: const TimeOfDay(hour: 00, minute: 00),
-              );
-              if (pickedTime != null) {
-                final localizations = MaterialLocalizations.of(context);
-                final formattedTimeOfDay =
-                    localizations.formatTimeOfDay(pickedTime);
-                // DateTime parsedTime = DateFormat.jm()
-                //     .parse(pickedTime.format(context).toString());
-                // String formattedTime = DateFormat('HH:mm').format(parsedTime);
-                setState(() {
-                  myControllerTime.text = formattedTimeOfDay;
-                });
-              }
-            },
-          ),
-          const SizedBox(height: 40),
-          // TASK DETAILS
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.only(
-                  top: 10, left: 20, right: 20, bottom: 10),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: Styles.cardColor,
-              ),
-              child: TextFormField(
-                minLines: 10,
-                maxLines: null,
-                cursorColor: Colors.white,
-                decoration: InputDecoration(
-                    hintText: 'Enter task details',
-                    hintStyle: Styles.hintText,
-                    border: InputBorder.none),
-                style: Styles.userInputText,
-                controller: myControllerDetails,
+                      const SizedBox(height: 40),
+                      // TASK TIME
+                      TextFormField(
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        style: Styles.userInputText,
+                        controller: _myControllerTime,
+                        validator: (timeValue) {
+                          if (timeValue!.isEmpty) {
+                            return "Cannot be empty";
+                          }
+                          return null;
+                        },
+                        decoration: Styles.inputTextFieldStyle("Time"),
+                        readOnly: true,
+                        onTap: () async {
+                          TimeOfDay? pickedTime = await showTimePicker(
+                            context: context,
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: ColorScheme.light(
+                                      primary: Styles.primaryBaseColor,
+                                      onPrimary: Styles.secondaryColor,
+                                      onSurface: Colors.black),
+                                  textButtonTheme: TextButtonThemeData(
+                                      style: TextButton.styleFrom(
+                                          foregroundColor:
+                                              Styles.primaryBaseColor)),
+                                ),
+                                child: child!,
+                              );
+                            },
+                            initialTime: const TimeOfDay(hour: 00, minute: 00),
+                          );
+                          if (pickedTime != null) {
+                            final localizations =
+                                MaterialLocalizations.of(context);
+                            final formattedTimeOfDay =
+                                localizations.formatTimeOfDay(pickedTime);
+                            // DateTime parsedTime = DateFormat.jm()
+                            //     .parse(pickedTime.format(context).toString());
+                            // String formattedTime = DateFormat('HH:mm').format(parsedTime);
+                            setState(() {
+                              _myControllerTime.text = formattedTimeOfDay;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 40),
+                      // TASK DETAILS
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.only(
+                              top: 10, left: 20, right: 20, bottom: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Styles.cardColor,
+                          ),
+                          child: TextFormField(
+                            minLines: 10,
+                            maxLines: null,
+                            cursorColor: Colors.white,
+                            decoration: InputDecoration(
+                                hintText: 'Enter task details',
+                                hintStyle: Styles.hintText,
+                                border: InputBorder.none),
+                            style: Styles.userInputText,
+                            controller: _myControllerDetails,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 30),
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 30),
-              height: 55,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _taskProvider.addTask(
-                        myControllerTitle.text,
-                        myControllerDate.text,
-                        myControllerTime.text,
-                        myControllerDetails.text);
-                    Navigator.popUntil(context,
-                        ModalRoute.withName(Navigator.defaultRouteName));
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Successfully added!'),
-                        duration: Duration(seconds: 2)));
-                  }
-                  // _errorText() == ""
-                  //     ? {
-                  //         appState.addTask(
-                  //             myControllerTitle.text,
-                  //             myControllerDate.text,
-                  //             myControllerTime.text,
-                  //             myControllerDetails.text),
-                  //         Navigator.popUntil(context,
-                  //             ModalRoute.withName(Navigator.defaultRouteName)),
-                  //         ScaffoldMessenger.of(context).showSnackBar(
-                  //             const SnackBar(
-                  //                 content: Text('Successfully added!')))
-                  //       }
-                  //     : showDialog(
-                  //         context: context,
-                  //         builder: (BuildContext context) =>
-                  //             errorPopupDialog(context));
-                },
-                style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.only(left: 20, right: 20),
-                    backgroundColor: const Color.fromARGB(255, 31, 138, 81),
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10))),
-                icon: Icon(
-                  Icons.add_rounded,
-                  color: Styles.secondaryColor,
-                  size: 30,
-                ),
-                label: Text(
-                  "Create",
-                  style: TextStyle(color: Styles.secondaryColor, fontSize: 20),
-                ),
+          Container(
+            margin: const EdgeInsets.only(bottom: 30),
+            height: 50,
+            width: Styles.kScreenWidth(context) * 0.9,
+            child: ElevatedButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  _taskProvider.addTask(
+                      _myControllerTitle.text,
+                      _myControllerDate.text,
+                      _myControllerTime.text,
+                      _myControllerDetails.text);
+                  Navigator.popUntil(
+                      context, ModalRoute.withName(Navigator.defaultRouteName));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Successfully added!'),
+                      duration: Duration(seconds: 2)));
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.only(left: 20, right: 20),
+                  backgroundColor: _isFormValid
+                      ? const Color.fromARGB(255, 31, 138, 81)
+                      : Colors.grey,
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10))),
+              child: Text(
+                "Create",
+                style: TextStyle(color: Styles.secondaryColor, fontSize: 20),
               ),
             ),
           )
