@@ -10,7 +10,7 @@ import 'package:todoapp/utils/styles.dart';
 
 class TaskPage extends StatefulWidget {
   @override
-  _TaskPageState createState() => _TaskPageState();
+  State<TaskPage> createState() => _TaskPageState();
 }
 
 class _TaskPageState extends State<TaskPage> {
@@ -22,7 +22,41 @@ class _TaskPageState extends State<TaskPage> {
     _taskProvider = Provider.of(context);
     return Scaffold(
       backgroundColor: Styles.primaryBaseColor,
-      appBar: topAppBar(),
+      appBar: AppBar(
+          title: Text("Tasks", style: Styles.headerText),
+          centerTitle: true,
+          leading: _isSelectionMode && _taskProvider.listOfTasks.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  iconSize: 30,
+                  onPressed: () {
+                    setState(() {
+                      _taskProvider.resetSelected();
+                      _isSelectionMode = false;
+                    });
+                  },
+                )
+              : null,
+          actions: <Widget>[
+            Row(
+              children: [
+                if (_isSelectionMode && _taskProvider.listOfTasks.isNotEmpty)
+                  IconButton(
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) =>
+                              deletePopupDialog(context));
+                    },
+                    icon: const Icon(Icons.delete_outlined),
+                    iconSize: 35,
+                  ),
+                const SizedBox(width: 10)
+              ],
+            )
+          ],
+          elevation: 1,
+          backgroundColor: Styles.primaryBaseColor),
       body: _taskProvider.listOfTasks.isNotEmpty
           ? GestureDetector(
               onTap: () {
@@ -42,7 +76,7 @@ class _TaskPageState extends State<TaskPage> {
             )
           : Center(child: Text("No ongoing tasks", style: Styles.hintText)),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.white70.withOpacity(0.5),
+        backgroundColor: Styles.blueColor,
         child: const Icon(
           Icons.add_rounded,
           size: 30,
@@ -92,43 +126,6 @@ class _TaskPageState extends State<TaskPage> {
     );
   }
 
-  AppBar topAppBar() {
-    return AppBar(
-        title: Text("Tasks", style: Styles.headerText),
-        leading: _isSelectionMode && _taskProvider.listOfTasks.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.close_rounded),
-                iconSize: 30,
-                onPressed: () {
-                  setState(() {
-                    _taskProvider.resetSelected();
-                    _isSelectionMode = false;
-                  });
-                },
-              )
-            : null,
-        actions: <Widget>[
-          Row(
-            children: [
-              if (_isSelectionMode && _taskProvider.listOfTasks.isNotEmpty)
-                IconButton(
-                  onPressed: () {
-                    showDialog(
-                        context: context,
-                        builder: (BuildContext context) =>
-                            deletePopupDialog(context));
-                  },
-                  icon: const Icon(Icons.delete_outlined),
-                  iconSize: 35,
-                ),
-              const SizedBox(width: 10)
-            ],
-          )
-        ],
-        elevation: 1,
-        backgroundColor: Styles.primaryBaseColor);
-  }
-
   Widget listItems(Task curTask, int taskIndex) {
     return Dismissible(
       key: Key(curTask.taskTitle),
@@ -142,6 +139,8 @@ class _TaskPageState extends State<TaskPage> {
         });
       },
       background: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+        // margin: const EdgeInsets.all(0),
         decoration: const BoxDecoration(
             color: Color.fromARGB(255, 31, 138, 81),
             borderRadius: BorderRadius.all(Radius.circular(15))),
@@ -159,14 +158,15 @@ class _TaskPageState extends State<TaskPage> {
             ]),
       ),
       child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+        // margin: const EdgeInsets.all(0),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         elevation: 5,
         child: ListTile(
             tileColor: Styles.cardColor,
             shape: curTask.selected
                 ? RoundedRectangleBorder(
-                    side: const BorderSide(
-                        color: Color.fromARGB(122, 34, 185, 250), width: 2),
+                    side: BorderSide(color: Styles.blueColor, width: 2),
                     borderRadius: BorderRadius.circular(15))
                 : RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15)),
@@ -182,6 +182,16 @@ class _TaskPageState extends State<TaskPage> {
                 _isSelectionMode = true;
               });
             },
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TaskDetails(
+                      task: curTask,
+                      isTaskPage: true,
+                    ),
+                  ));
+            },
             subtitle: Text("${curTask.taskDate} | ${curTask.taskTime}",
                 style: Styles.subTitleText),
             trailing: !_isSelectionMode
@@ -191,22 +201,13 @@ class _TaskPageState extends State<TaskPage> {
                         border: Border(
                             left: BorderSide(
                                 width: .5, color: Styles.buttonColor))),
-                    child: SizedBox(
+                    child: Container(
+                        padding: const EdgeInsets.only(left: 5),
                         width: 30,
-                        child: IconButton(
-                          iconSize: 30,
-                          icon: const Icon(Icons.keyboard_arrow_right_rounded),
+                        child: const Icon(
+                          (Icons.keyboard_arrow_right_rounded),
+                          size: 30,
                           color: Colors.white,
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => TaskDetails(
-                                    task: curTask,
-                                    isTaskPage: true,
-                                  ),
-                                ));
-                          },
                         )))
                 : Checkbox(
                     activeColor: Styles.blueColor,
