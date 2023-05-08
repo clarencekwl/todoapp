@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-// import 'package:todoapp/pages/edit_task_page.dart';
 import 'package:todoapp/models/Task.dart';
+import 'package:todoapp/widgets/edit_task_widget.dart';
 import 'package:todoapp/utils/styles.dart';
 import 'package:todoapp/providers/task_provider.dart';
 import 'package:provider/provider.dart';
@@ -31,7 +31,7 @@ class _TaskDetailsState extends State<TaskDetails> {
     return Scaffold(
         backgroundColor: Styles.primaryBaseColor,
         appBar: AppBar(elevation: 1, backgroundColor: Styles.primaryBaseColor),
-        body: mainPage());
+        body: taskDetailsColumn());
   }
 
   Row displayDetails(IconData icon, String details) {
@@ -76,7 +76,7 @@ class _TaskDetailsState extends State<TaskDetails> {
     );
   }
 
-  Widget mainPage() {
+  Widget taskDetailsColumn() {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -137,12 +137,16 @@ class _TaskDetailsState extends State<TaskDetails> {
                   ? null
                   : ElevatedButton(
                       onPressed: () {
-                        // Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //         builder: (context) => EditPage(
-                        //               task: widget.task,
-                        //             )));
+                        showModalBottomSheet(
+                            backgroundColor:
+                                Styles.primaryBaseColor.withOpacity(1),
+                            isScrollControlled: true,
+                            context: context,
+                            shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20))),
+                            builder: (context) => EditTask(task: widget.task));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Styles.blueColor,

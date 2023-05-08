@@ -263,9 +263,6 @@ class _CreateTaskState extends State<CreateTask> {
                       _myControllerDetails.text);
                   Navigator.popUntil(
                       context, ModalRoute.withName(Navigator.defaultRouteName));
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Successfully added!'),
-                      duration: Duration(seconds: 2)));
                 }
               },
               style: ElevatedButton.styleFrom(
