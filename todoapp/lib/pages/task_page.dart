@@ -3,10 +3,12 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todoapp/models/Task.dart';
+import 'package:todoapp/pages/completed_task_page.dart';
 import 'package:todoapp/pages/create_task_page.dart';
 import 'package:todoapp/pages/task_details_page.dart';
 import 'package:todoapp/providers/task_provider.dart';
 import 'package:todoapp/utils/styles.dart';
+import 'package:todoapp/widgets/no_glow_scroll.dart';
 
 class TaskPage extends StatefulWidget {
   @override
@@ -16,75 +18,123 @@ class TaskPage extends StatefulWidget {
 class _TaskPageState extends State<TaskPage> {
   bool _isSelectionMode = false;
   late TaskProvider _taskProvider;
+  int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     _taskProvider = Provider.of(context);
     return Scaffold(
       backgroundColor: Styles.primaryBaseColor,
-      appBar: AppBar(
-          title: Text("Tasks", style: Styles.headerText),
-          centerTitle: true,
-          leading: _isSelectionMode && _taskProvider.listOfTasks.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  iconSize: 30,
-                  onPressed: () {
-                    setState(() {
-                      _taskProvider.resetSelected();
-                      _isSelectionMode = false;
-                    });
-                  },
+      appBar: _selectedIndex == 0
+          ? AppBar(
+              title: Text("Tasks", style: Styles.headerText),
+              centerTitle: true,
+              leading: _isSelectionMode && _taskProvider.listOfTasks.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      iconSize: 30,
+                      onPressed: () {
+                        setState(() {
+                          _taskProvider.resetSelected();
+                          _isSelectionMode = false;
+                        });
+                      },
+                    )
+                  : null,
+              actions: <Widget>[
+                Row(
+                  children: [
+                    if (_isSelectionMode &&
+                        _taskProvider.listOfTasks.isNotEmpty)
+                      IconButton(
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                                  deletePopupDialog(context));
+                        },
+                        icon: const Icon(Icons.delete_outlined),
+                        iconSize: 35,
+                      ),
+                    const SizedBox(width: 10)
+                  ],
                 )
-              : null,
-          actions: <Widget>[
-            Row(
-              children: [
-                if (_isSelectionMode && _taskProvider.listOfTasks.isNotEmpty)
-                  IconButton(
-                    onPressed: () {
-                      showDialog(
-                          context: context,
-                          builder: (BuildContext context) =>
-                              deletePopupDialog(context));
-                    },
-                    icon: const Icon(Icons.delete_outlined),
-                    iconSize: 35,
-                  ),
-                const SizedBox(width: 10)
               ],
-            )
-          ],
-          elevation: 1,
-          backgroundColor: Styles.primaryBaseColor),
-      body: _taskProvider.listOfTasks.isNotEmpty
-          ? GestureDetector(
-              onTap: () {
-                _taskProvider.resetSelected();
-                _isSelectionMode = false;
-                setState(() {});
+              elevation: 1,
+              backgroundColor: Styles.primaryBaseColor)
+          : null,
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          _taskProvider.listOfTasks.isNotEmpty
+              ? GestureDetector(
+                  onTap: () {
+                    _taskProvider.resetSelected();
+                    _isSelectionMode = false;
+                    setState(() {});
+                  },
+                  child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 20),
+                      child: ScrollConfiguration(
+                        behavior: NoGlowScrollBehavior(),
+                        child: StretchingOverscrollIndicator(
+                          axisDirection: AxisDirection.down,
+                          child: ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemCount: _taskProvider.listOfTasks.length,
+                              itemBuilder: (context, index) {
+                                return listItems(
+                                    _taskProvider.listOfTasks[index], index);
+                              }),
+                        ),
+                      )),
+                )
+              : Center(child: Text("No ongoing tasks", style: Styles.hintText)),
+          CompletedTaskPage(),
+        ],
+      ),
+      floatingActionButton: _selectedIndex == 0
+          ? FloatingActionButton(
+              backgroundColor: Styles.blueColor,
+              child: const Icon(
+                Icons.add_rounded,
+                size: 30,
+              ),
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => CreateTask()));
               },
-              child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                  child: ListView.builder(
-                      itemCount: _taskProvider.listOfTasks.length,
-                      itemBuilder: (context, index) {
-                        return listItems(
-                            _taskProvider.listOfTasks[index], index);
-                      })),
             )
-          : Center(child: Text("No ongoing tasks", style: Styles.hintText)),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Styles.blueColor,
-        child: const Icon(
-          Icons.add_rounded,
-          size: 30,
-        ),
-        onPressed: () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => CreateTask()));
+          : null,
+      bottomNavigationBar: BottomNavigationBar(
+        elevation: 1,
+        selectedIconTheme: IconThemeData(color: Styles.secondaryColor),
+        unselectedIconTheme: const IconThemeData(color: Colors.grey),
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        type: BottomNavigationBarType.fixed,
+        iconSize: 30,
+        currentIndex: _selectedIndex,
+        backgroundColor: Styles.primaryBaseColor,
+        onTap: (value) {
+          setState(() {
+            _selectedIndex = value;
+          });
         },
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.house_rounded),
+            label: "Home",
+          ),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.playlist_add_check_rounded), label: "Completed"),
+        ],
       ),
     );
   }
