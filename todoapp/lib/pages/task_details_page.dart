@@ -54,13 +54,13 @@ class _TaskDetailsState extends State<TaskDetails> {
                 _taskProvider.addTaskComplete(widget.task),
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Task marked as complete!'),
-                    duration: Duration(seconds: 2)))
+                    duration: Duration(seconds: 1, milliseconds: 5)))
               }
             : {
                 _taskProvider.undoTask(widget.task),
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Undo completed'),
-                    duration: Duration(seconds: 2)))
+                    duration: Duration(seconds: 1, milliseconds: 5)))
               };
         Navigator.popUntil(
           context,

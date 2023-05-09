@@ -19,7 +19,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage> {
   @override
   Widget build(BuildContext context) {
     _taskProvider = Provider.of(context);
-    var completedTaskList = _taskProvider.completedtasksList;
+    var _listOfCompletedTask = _taskProvider.listOfCompletedTasks;
 
     return Scaffold(
         backgroundColor: Styles.primaryBaseColor,
@@ -29,7 +29,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage> {
           centerTitle: true,
           backgroundColor: Styles.primaryBaseColor,
         ),
-        body: completedTaskList.isNotEmpty
+        body: _listOfCompletedTask.isNotEmpty
             ? Container(
                 padding:
                     const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
@@ -39,9 +39,9 @@ class _CompletedTaskPageState extends State<CompletedTaskPage> {
                     axisDirection: AxisDirection.down,
                     child: ListView.builder(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        itemCount: completedTaskList.length,
+                        itemCount: _listOfCompletedTask.length,
                         itemBuilder: (context, index) {
-                          return listItems(completedTaskList[index], index);
+                          return listItems(_listOfCompletedTask[index], index);
                         }),
                   ),
                 ))
@@ -51,15 +51,14 @@ class _CompletedTaskPageState extends State<CompletedTaskPage> {
 
   Widget listItems(Task curCompletedTask, int taskIndex) {
     return Dismissible(
-      key: Key(curCompletedTask.taskTitle),
+      key: Key(curCompletedTask.hashCode.toString()),
       direction: DismissDirection.startToEnd,
-      onDismissed: (direction) {
-        setState(() {
-          log(curCompletedTask.taskTitle);
-          _taskProvider.undoTask(curCompletedTask);
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Undo completed'), duration: Duration(seconds: 2)));
-        });
+      onDismissed: (direction) async {
+        await _taskProvider.undoTask(curCompletedTask);
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Undo completed'),
+            duration: Duration(seconds: 1, milliseconds: 5)));
       },
       background: Container(
         margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),

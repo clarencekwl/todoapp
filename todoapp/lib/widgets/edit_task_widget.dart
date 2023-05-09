@@ -252,7 +252,7 @@ class _EditTaskState extends State<EditTask> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Successfully edited!'),
-                        duration: Duration(seconds: 2)));
+                        duration: Duration(seconds: 1, milliseconds: 5)));
                   }
                 });
               },

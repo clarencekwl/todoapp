@@ -5,8 +5,30 @@ import 'package:todoapp/models/Task.dart';
 
 class TaskProvider extends ChangeNotifier {
   List<Task> _listOfTasks = [];
-
   List<Task> get listOfTasks => _listOfTasks;
+  set listOfTasks(List<Task> listOfTasks) {
+    _listOfTasks = listOfTasks;
+  }
+
+  List<Task> _listOfCompletedTasks = [];
+  List<Task> get listOfCompletedTasks => _listOfCompletedTasks;
+  set listOfCompletedTasks(List<Task> listOfCompletedTasks) {
+    _listOfCompletedTasks = listOfCompletedTasks;
+  }
+
+  int _numberOfSelected = 0;
+  int get numberOfSelected => _numberOfSelected;
+  set numberOfSelected(int numberOfSelected) {
+    _numberOfSelected = numberOfSelected;
+    notifyListeners();
+  }
+
+  bool _selectionMode = false;
+  bool get selectionMode => _selectionMode;
+  set selectionMode(bool selectionMode) {
+    _selectionMode = selectionMode;
+    notifyListeners();
+  }
 
   void addTask(String title, String date, String time, String details) {
     _listOfTasks.add(Task(
@@ -18,19 +40,22 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeTasks() {
+  Future<void> removeTasks() async {
     _listOfTasks.removeWhere((task) => task.selected);
     notifyListeners();
   }
 
   void setSelection(bool value, Task task) {
     _listOfTasks[_listOfTasks.indexOf(task)].selected = value;
-    notifyListeners();
-  }
-
-  void undoTask(Task task) {
-    _listOfTasks.add(task);
-    completedtasksList.remove(task);
+    if (false == value) {
+      _numberOfSelected--;
+      if (_numberOfSelected == 0) {
+        _selectionMode = false;
+      }
+    } else {
+      _selectionMode = true;
+      _numberOfSelected++;
+    }
     notifyListeners();
   }
 
@@ -38,14 +63,21 @@ class TaskProvider extends ChangeNotifier {
     for (Task task in _listOfTasks) {
       task.selected = false;
     }
+    _selectionMode = false;
+    _numberOfSelected = 0;
     notifyListeners();
   }
 
-  List<Task> completedtasksList = [];
-  void addTaskComplete(Task completedTask) {
+  Future<void> undoTask(Task task) async {
+    _listOfTasks.add(task);
+    await _listOfCompletedTasks.remove(task);
+    notifyListeners();
+  }
+
+  Future<void> addTaskComplete(Task completedTask) async {
     if (_listOfTasks.contains(completedTask)) {
-      completedtasksList.add(completedTask);
-      _listOfTasks.remove(completedTask);
+      _listOfCompletedTasks.add(completedTask);
+      await _listOfTasks.remove(completedTask);
       notifyListeners();
     }
   }

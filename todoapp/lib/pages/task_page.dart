@@ -16,7 +16,6 @@ class TaskPage extends StatefulWidget {
 }
 
 class _TaskPageState extends State<TaskPage> {
-  bool _isSelectionMode = false;
   late TaskProvider _taskProvider;
   int _selectedIndex = 0;
 
@@ -34,22 +33,21 @@ class _TaskPageState extends State<TaskPage> {
           ? AppBar(
               title: Text("Tasks", style: Styles.headerText),
               centerTitle: true,
-              leading: _isSelectionMode && _taskProvider.listOfTasks.isNotEmpty
+              leading: _taskProvider.selectionMode &&
+                      _taskProvider.listOfTasks.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.close_rounded),
                       iconSize: 30,
                       onPressed: () {
-                        setState(() {
-                          _taskProvider.resetSelected();
-                          _isSelectionMode = false;
-                        });
+                        _taskProvider.resetSelected();
+                        setState(() {});
                       },
                     )
                   : null,
               actions: <Widget>[
                 Row(
                   children: [
-                    if (_isSelectionMode &&
+                    if (_taskProvider.selectionMode &&
                         _taskProvider.listOfTasks.isNotEmpty)
                       IconButton(
                         onPressed: () {
@@ -58,7 +56,7 @@ class _TaskPageState extends State<TaskPage> {
                               builder: (BuildContext context) =>
                                   deletePopupDialog(context));
                         },
-                        icon: const Icon(Icons.delete_outlined),
+                        icon: const Icon(Icons.delete_sweep_rounded),
                         iconSize: 35,
                       ),
                     const SizedBox(width: 10)
@@ -75,7 +73,6 @@ class _TaskPageState extends State<TaskPage> {
               ? GestureDetector(
                   onTap: () {
                     _taskProvider.resetSelected();
-                    _isSelectionMode = false;
                     setState(() {});
                   },
                   child: Container(
@@ -123,9 +120,8 @@ class _TaskPageState extends State<TaskPage> {
         currentIndex: _selectedIndex,
         backgroundColor: Styles.primaryBaseColor,
         onTap: (value) {
-          setState(() {
-            _selectedIndex = value;
-          });
+          _selectedIndex = value;
+          setState(() {});
         },
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -170,6 +166,7 @@ class _TaskPageState extends State<TaskPage> {
           },
           child: const Text(
             "CANCEL",
+            style: TextStyle(color: Colors.grey),
           ),
         )
       ],
@@ -178,15 +175,14 @@ class _TaskPageState extends State<TaskPage> {
 
   Widget listItems(Task curTask, int taskIndex) {
     return Dismissible(
-      key: Key(curTask.taskTitle),
+      key: Key(curTask.hashCode.toString()),
       direction: DismissDirection.startToEnd,
-      onDismissed: (direction) {
-        setState(() {
-          _taskProvider.addTaskComplete(curTask);
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Task marked as complete'),
-              duration: Duration(seconds: 2)));
-        });
+      onDismissed: (direction) async {
+        await _taskProvider.addTaskComplete(curTask);
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Task marked as complete'),
+            duration: Duration(seconds: 1, milliseconds: 5)));
       },
       background: Container(
         margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
@@ -228,23 +224,23 @@ class _TaskPageState extends State<TaskPage> {
             ),
             onLongPress: () {
               _taskProvider.setSelection(true, curTask);
-              setState(() {
-                _isSelectionMode = true;
-              });
+              setState(() {});
             },
             onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TaskDetails(
-                      task: curTask,
-                      isTaskPage: true,
-                    ),
-                  ));
+              true == _taskProvider.selectionMode
+                  ? null
+                  : Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TaskDetails(
+                          task: curTask,
+                          isTaskPage: true,
+                        ),
+                      ));
             },
             subtitle: Text("${curTask.taskDate} | ${curTask.taskTime}",
                 style: Styles.subTitleText),
-            trailing: !_isSelectionMode
+            trailing: false == _taskProvider.selectionMode
                 ? Container(
                     padding: const EdgeInsets.only(left: 2.0),
                     decoration: BoxDecoration(
@@ -265,7 +261,8 @@ class _TaskPageState extends State<TaskPage> {
                     side: const BorderSide(color: Colors.white),
                     value: curTask.selected,
                     onChanged: (value) {
-                      _taskProvider.setSelection(value!, curTask);
+                      _taskProvider.setSelection(!curTask.selected, curTask);
+                      setState(() {});
                     })),
       ),
     );
