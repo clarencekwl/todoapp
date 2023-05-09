@@ -1,6 +1,7 @@
 # todoapp
 
-A new Flutter project.
+A new Flutter project. 
+Todoapp allows users to create/read/update/delete tasks with a responsive UI.
 
 ## Getting Started
 
